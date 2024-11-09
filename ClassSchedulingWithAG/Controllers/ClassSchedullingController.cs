@@ -1,3 +1,5 @@
+using ClassSchedulingWithAG.Models;
+using ClassSchedulingWithAG.Services;
 using ClassSchedulingWithAG.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
@@ -41,6 +43,13 @@ namespace ClassSchedulingWithAG.Controllers
                     {
                         return BadRequest("Invalid JSON structure.");
                     }
+
+                    var algoritmoGenetico = new AlgoritmoGeneticoService();
+
+
+                    algoritmoGenetico.CalculaHOrariosComAlgoritmoGnético(inputData);
+
+                   
                 }
 
                 return Ok("File processed successfully.");
