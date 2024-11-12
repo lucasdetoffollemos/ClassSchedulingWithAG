@@ -74,5 +74,37 @@ namespace ClassSchedulingWithAG.Models
 
             return horario;
         }
+
+        public int Fitness()
+        {
+            // Calcula a adequação da solução
+            int score = 0;
+
+            // Verifique a disponibilidade do professor e evite conflitos (simplificado)
+            foreach (var curso in Cursos)
+            {
+                foreach (var disciplina in curso.Disciplinas)
+                {
+                    var professor = Professores.FirstOrDefault(p => p.Nome == disciplina.Professor);
+                    if (professor != null)
+                    {
+                        foreach (var dia in MapaDeHorarios.Keys)
+                        {
+                            if (professor.Disponibilidade.Segunda && MapaDeHorarios[dia].Contains(disciplina.Nome))
+                            {
+                                score++;
+                            }
+
+                            if (professor.Disponibilidade.Segunda && MapaDeHorarios["segunda"].Contains(disciplina.Nome))
+                            {
+                                score++;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return score;
+        }
     }
 }

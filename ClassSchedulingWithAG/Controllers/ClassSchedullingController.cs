@@ -19,16 +19,16 @@ namespace ClassSchedulingWithAG.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> Post(IFormFile file)
+        public async Task<ActionResult> Post(DataFromFront data)
         {
-            if (file == null || file.Length == 0)
+            if (data.file == null || data.file.Length == 0)
             {
                 return BadRequest("No file uploaded.");
             }
 
             try
             {
-                using (var stream = new StreamReader(file.OpenReadStream()))
+                using (var stream = new StreamReader(data.file.OpenReadStream()))
                 {
                     var options = new JsonSerializerOptions
                     {
