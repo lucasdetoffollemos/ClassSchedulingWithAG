@@ -26,12 +26,19 @@ namespace ClassSchedulingWithAG.Services
         public Horario CalculaHOrariosComAlgoritmoGnético(InputData inputData)
         {
 
-            IniciaPopulacao(inputData);
+            List<Cromossomo> populacao = new List<Cromossomo>();
+
+            for (int i = 0; i < 10; i++) 
+            { 
+                populacao.Add(IniciaPopulacao(inputData));
+            }
+
+           
             
             return null;
         }
 
-        private void IniciaPopulacao(InputData inputData)
+        private Cromossomo IniciaPopulacao(InputData inputData)
         {
             var cromossomo = new Cromossomo();
 
@@ -62,6 +69,8 @@ namespace ClassSchedulingWithAG.Services
             }
 
             cromossomo.Nota = 100;
+
+            return cromossomo;
 
         }
 
