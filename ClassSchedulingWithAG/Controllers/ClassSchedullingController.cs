@@ -46,10 +46,7 @@ namespace ClassSchedulingWithAG.Controllers
 
                     var algoritmoGenetico = new AlgoritmoGeneticoService();
 
-
                     algoritmoGenetico.CalculaHOrariosComAlgoritmoGnético(inputData);
-
-                   
                 }
 
                 return Ok("File processed successfully.");
