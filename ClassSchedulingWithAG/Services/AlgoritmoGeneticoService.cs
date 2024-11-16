@@ -46,22 +46,22 @@ namespace ClassSchedulingWithAG.Services
 
             var cromossoSelecionado = populacao.SingleOrDefault(x => x.Nota == 1000);
 
-            if(cromossoSelecionado != null)
+            if (cromossoSelecionado != null)
                 return cromossoSelecionado.DiasDaSemanaECodigosDasDisciplinas;
 
             List<Cromossomo> novaPopulacao = new List<Cromossomo>();
             //esse 10 sera o item de qtnd cromossomos dividido por 2
-            for(int i = 0; i < 5; i++)
+            for (int i = 0; i < 5; i++)
             {
                 var pais = new List<Cromossomo>();
-                for(int j = 0; j < 2; j++)
+                for (int j = 0; j < 2; j++)
                 {
                     var cromossomoPai = Selecao(populacao);
                     pais.Add(cromossomoPai);
                 }
 
                 //probabilidade de cruzamento, valor que vai vir do front
-                novaPopulacao.AddRange(Cruzamento(pais[0], pais[1], 0.7));        
+                novaPopulacao.AddRange(Cruzamento(pais[0], pais[1], 0.7));
             }
 
 
@@ -170,7 +170,7 @@ namespace ClassSchedulingWithAG.Services
                     {
                         var disciplina = GetDisciplinaByCodigo(codDis, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
 
-                        if(disciplina != null)
+                        if (disciplina != null)
                         {
                             var cargaHoraria = disciplina.CH;
 
@@ -192,12 +192,12 @@ namespace ClassSchedulingWithAG.Services
 
                         }
 
-                        
+
                     }
                 }
             }
         }
-
+        // 
         private void VerificaDisponibilidadeProfessor(List<Cromossomo> populacao, InputData inputData)
         {
             foreach (var cromossomo in populacao)
@@ -855,7 +855,6 @@ namespace ClassSchedulingWithAG.Services
         private Cromossomo IniciaPopulacao(InputData inputData)
         {
             var cromossomo = new Cromossomo();
-
             int currentIndex = 0;
 
             foreach (var curso in inputData.Cursos)
@@ -863,29 +862,42 @@ namespace ClassSchedulingWithAG.Services
                 var nomeCurso = curso.Nome;
                 var disciplinasPorFase = curso.Disciplinas.GroupBy(x => x.Fase).ToList();
 
-                var fasesDoCurso = disciplinasPorFase.Count();
+                // Certifique-se de que há pelo menos uma fase
+                if (disciplinasPorFase.Count == 0)
+                    continue;
 
+                var fasesDoCurso = disciplinasPorFase.Count;
                 var qntDisciplinas = curso.Disciplinas.Count();
 
                 for (int i = 0; i < fasesDoCurso; i++)
                 {
                     var codigosAleatoriosDasDisciplinas = GeraHorariosAleatorios(disciplinasPorFase[i].Select(x => x.Codigo).ToList(), nomeCurso);
 
-                    for (int j = 0; j < codigosAleatoriosDasDisciplinas.Length; j++)
+                    // Verifique se o array de códigos não está vazio
+                    if (codigosAleatoriosDasDisciplinas != null && codigosAleatoriosDasDisciplinas.Length > 0)
                     {
-                        if (currentIndex < cromossomo.DiasDaSemanaECodigosDasDisciplinas.Length)
+                        for (int j = 0; j < codigosAleatoriosDasDisciplinas.Length; j++)
                         {
-                            cromossomo.DiasDaSemanaECodigosDasDisciplinas[currentIndex] = codigosAleatoriosDasDisciplinas[j];
-                            currentIndex++;
+                            // Verifique se o índice atual não ultrapassa o limite do array
+                            if (currentIndex < cromossomo.DiasDaSemanaECodigosDasDisciplinas.Length)
+                            {
+                                cromossomo.DiasDaSemanaECodigosDasDisciplinas[currentIndex] = codigosAleatoriosDasDisciplinas[j];
+                                currentIndex++;
+                            }
+                            else
+                            {
+                                // Caso o índice ultrapasse o tamanho do array, podemos interromper
+                                break;
+                            }
                         }
                     }
                 }
             }
 
+            // Defina a nota de forma mais dinâmica, caso necessário (aqui apenas um valor fixo)
             cromossomo.Nota = 1000;
 
             return cromossomo;
-
         }
 
         private int[] GeraHorariosAleatorios(List<int> disciplinasPorFase, string nomeCurso)
@@ -916,5 +928,111 @@ namespace ClassSchedulingWithAG.Services
             return disciplinaAleatorias;
 
         }
+
+        private List<Cromossomo> SelecionaCromossomos(List<Cromossomo> populacao, int quantidadeSelecao)
+        {
+            var selecionados = new List<Cromossomo>();
+            var random = new Random();
+
+            // Seleção por torneio
+            for (int i = 0; i < quantidadeSelecao; i++)
+            {
+                var torneio = new List<Cromossomo>();
+
+                // Escolhe aleatoriamente 2 cromossomos diferentes para o torneio
+                while (torneio.Count < 2)
+                {
+                    var indiceAleatorio = random.Next(populacao.Count);
+                    var cromossomoAleatorio = populacao[indiceAleatorio];
+
+                    // Evita selecionar o mesmo cromossomo mais de uma vez
+                    if (!torneio.Contains(cromossomoAleatorio))
+                    {
+                        torneio.Add(cromossomoAleatorio);
+                    }
+                }
+
+                // Seleciona o cromossomo com maior nota do torneio
+                var melhorCromossomo = torneio.OrderByDescending(x => x.Nota).First();
+                selecionados.Add(melhorCromossomo);
+            }
+
+            return selecionados;
+        }
+
+        private void Mutacao(Cromossomo cromossomo, List<Curso> cursos)
+        {
+            var random = new Random();
+
+            // Exemplo de mutação: altera aleatoriamente um gene do cromossomo
+            int indiceGene = random.Next(cromossomo.DiasDaSemanaECodigosDasDisciplinas.Length);
+
+            // Obter o código da disciplina no gene selecionado
+            int codigoDisciplinaAleatorio = cromossomo.DiasDaSemanaECodigosDasDisciplinas[indiceGene];
+
+            // Encontrar um curso que contenha a disciplina com o código correspondente
+            var curso = cursos.FirstOrDefault(c => c.Disciplinas.Any(d => d.Codigo == codigoDisciplinaAleatorio));
+
+            if (curso != null)
+            {
+                // Encontrar uma disciplina aleatória dentro do curso
+                var disciplinaAleatoria = curso.Disciplinas[random.Next(curso.Disciplinas.Count)];
+
+                // Aplica a mutação: substitui o código de disciplina do gene
+                cromossomo.DiasDaSemanaECodigosDasDisciplinas[indiceGene] = disciplinaAleatoria.Codigo;
+            }
+        }
+
+        // não sei se precisa da evolução, caso precise já temos alguma coisa.
+        private void Evolucao(InputData inputData)
+        {
+            int tamanhoPopulacao = 100;
+            int numeroDeGeracoes = 50;  
+            int quantidadeSelecao = 50;  
+
+            var populacao = new List<Cromossomo>();
+
+            
+            for (int i = 0; i < tamanhoPopulacao; i++)
+            {
+                var cromossomo = IniciaPopulacao(inputData);
+                populacao.Add(cromossomo);
+            }
+
+            for (int geracao = 0; geracao < numeroDeGeracoes; geracao++)
+            {
+                var novaPopulacao = new List<Cromossomo>();
+
+                // seleção dos cromossomos para o cruzamento
+                var cromossomosSelecionados = SelecionaCromossomos(populacao, quantidadeSelecao);
+
+                // Realiza o cruzamento para gerar novos cromossomos
+                foreach (var cromossomo in cromossomosSelecionados)
+                {
+                    var cromossomoFilho = Cruzamento(cromossomo);
+                    novaPopulacao.Add(cromossomoFilho);
+                }
+
+                // aplica a mutação nos cromossomos filhos
+                foreach (var cromossomo in novaPopulacao)
+                {
+                    Mutacao(cromossomo, inputData.Cursos);
+                }
+
+                // atualiza a população para a próxima geração
+                populacao = novaPopulacao;
+            }
+        }
+
+        private Cromossomo Cruzamento(Cromossomo cromossomoPai)
+        {
+            var cromossomoFilho = new Cromossomo
+            {
+                DiasDaSemanaECodigosDasDisciplinas = (int[])cromossomoPai.DiasDaSemanaECodigosDasDisciplinas.Clone()
+            };
+
+            return cromossomoFilho;
+        }
+
     }
 }
