@@ -1,6 +1,7 @@
 ﻿using ClassSchedulingWithAG.Models;
 using ClassSchedulingWithAG.ViewModels;
 using Microsoft.AspNetCore.Components.Forms;
+using System;
 using System.Runtime.Intrinsics.X86;
 
 namespace ClassSchedulingWithAG.Services
@@ -28,19 +29,118 @@ namespace ClassSchedulingWithAG.Services
 
     public class AlgoritmoGeneticoService
     {
-        public Horario CalculaHOrariosComAlgoritmoGnético(InputData inputData)
+        public int[] CalculaHOrariosComAlgoritmoGnético(InputData inputData)
         {
 
             List<Cromossomo> populacao = new List<Cromossomo>();
 
+            //esse 10 sera o item de qtnd cromossomos 
             for (int i = 0; i < 10; i++)
             {
                 populacao.Add(IniciaPopulacao(inputData));
             }
 
+            //aqui teremo um for com a qntd max de iterações
+
             Fitness(populacao, inputData);
 
+            var cromossoSelecionado = populacao.SingleOrDefault(x => x.Nota == 1000);
+
+            if(cromossoSelecionado != null)
+                return cromossoSelecionado.DiasDaSemanaECodigosDasDisciplinas;
+
+            List<Cromossomo> novaPopulacao = new List<Cromossomo>();
+            //esse 10 sera o item de qtnd cromossomos 
+            for(int i = 0; i < 5; i++)
+            {
+                var pais = new List<Cromossomo>();
+                for(int j = 0; j < 2; j++)
+                {
+                    var cromossomoPai = Selecao(populacao);
+                    pais.Add(cromossomoPai);
+                }
+
+                //probabilidade de cruzamento, valor que vai vir do front
+                novaPopulacao.AddRange(Cruzamento(pais[0], pais[1], 0.7));        
+            }
+
+
             return null;
+        }
+
+        private List<Cromossomo> Cruzamento(Cromossomo pai1, Cromossomo pai2, double probabilidadeCruzamento)
+        {
+            var random = new Random();
+            // Verifica se o cruzamento ocorre com base na probabilidade
+            if (random.NextDouble() > probabilidadeCruzamento)
+            {
+                // Se não ocorrer cruzamento, os filhos são cópias dos pais
+                return new List<Cromossomo>
+                {
+                new Cromossomo { DiasDaSemanaECodigosDasDisciplinas = (int[])pai1.DiasDaSemanaECodigosDasDisciplinas.Clone() },
+                new Cromossomo { DiasDaSemanaECodigosDasDisciplinas = (int[])pai2.DiasDaSemanaECodigosDasDisciplinas.Clone() }
+                };
+            }
+
+            int tamanho = pai1.DiasDaSemanaECodigosDasDisciplinas.Length;
+            int pontoDeCorte = random.Next(1, tamanho);
+
+            Cromossomo filho1 = new Cromossomo
+            {
+                DiasDaSemanaECodigosDasDisciplinas = new int[tamanho],
+                Nota = 1000
+            };
+
+            Cromossomo filho2 = new Cromossomo
+            {
+                DiasDaSemanaECodigosDasDisciplinas = new int[tamanho],
+                Nota = 1000
+            };
+
+            // Realiza o cruzamento no ponto de corte
+            for (int i = 0; i < tamanho; i++)
+            {
+                if (i < pontoDeCorte)
+                {
+                    filho1.DiasDaSemanaECodigosDasDisciplinas[i] = pai1.DiasDaSemanaECodigosDasDisciplinas[i];
+                    filho2.DiasDaSemanaECodigosDasDisciplinas[i] = pai2.DiasDaSemanaECodigosDasDisciplinas[i];
+                }
+                else
+                {
+                    filho1.DiasDaSemanaECodigosDasDisciplinas[i] = pai2.DiasDaSemanaECodigosDasDisciplinas[i];
+                    filho2.DiasDaSemanaECodigosDasDisciplinas[i] = pai1.DiasDaSemanaECodigosDasDisciplinas[i];
+                }
+            }
+
+            return new List<Cromossomo> { filho1, filho2 };
+        }
+
+        private Cromossomo Selecao(List<Cromossomo> populacao)
+        {
+            //selecionar individuos para cruzar
+            var random = new Random();
+
+            // Calcula o somatório de todas as notas
+            int somaNotas = populacao.Sum(c => c.Nota);
+
+            // Gera um número aleatório entre 0 e a soma total das notas
+            int roleta = random.Next(0, somaNotas);
+
+            // Percorre a população acumulando as notas até passar o valor da roleta
+            int acumulador = 0;
+            foreach (var cromossomo in populacao)
+            {
+                acumulador += cromossomo.Nota;
+                if (acumulador >= roleta)
+                {
+                    return cromossomo;
+                }
+            }
+
+            // Retorna o último cromossomo por segurança (caso a roleta não tenha selecionado antes)
+            return populacao.Last();
+
+
         }
 
         private void Fitness(List<Cromossomo> populacao, InputData inputData)
