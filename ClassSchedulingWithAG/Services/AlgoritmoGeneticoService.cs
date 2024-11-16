@@ -15,11 +15,11 @@ namespace ClassSchedulingWithAG.Services
     //caso esse array algum professor tenha nota 2 ou mais, descontar da nota do cromosso
     //nota do cromosso = 100) feito
 
-    //verificar disponibilidade dos professores, caso no dia eles não possam dar aula
-    //descontar mais um ponto do cromossomo
+    //(verificar disponibilidade dos professores, caso no dia eles não possam dar aula
+    //descontar mais um ponto do cromossomo) feito
 
 
-    //verificar questão de turmas = ch 40 = 1 aula, 80 = 2 aulas 
+    //(verificar questão de turmas = ch 40 = 1 aula, 80 = 2 aulas, 120 = 3 aulas) feito
 
 
     //seleção/cruzamento
@@ -47,7 +47,55 @@ namespace ClassSchedulingWithAG.Services
         {
             RetiraNotaDoCromossomoBaseadoNosConflitosDeHorarioDosProfessores(populacao, inputData);
             VerificaDisponibilidadeProfessor(populacao, inputData);
+            VerificaCargaHorarioBateComQntDeAulasNaSemana(populacao, inputData);
+        }
 
+        private void VerificaCargaHorarioBateComQntDeAulasNaSemana(List<Cromossomo> populacao, InputData inputData)
+        {
+            foreach (var cromossomo in populacao)
+            {
+                var listDiasDaSemanaECodigosDasDisciplinas = cromossomo.DiasDaSemanaECodigosDasDisciplinas.ToList();
+
+
+                //quebro de 10 em 10 o array de horarios
+                var diasDaSemanaECodigosDasDisciplinasGrouped = listDiasDaSemanaECodigosDasDisciplinas
+                .Select((value, index) => new { value, index })
+                .GroupBy(x => x.index / 10)
+                .Select(g => g.Select(x => x.value).ToList())
+                .ToList();
+
+                foreach (var disciplinasDaSemana in diasDaSemanaECodigosDasDisciplinasGrouped)
+                {
+                    foreach (var codDis in disciplinasDaSemana)
+                    {
+                        var disciplina = GetDisciplinaByCodigo(codDis, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
+
+                        if(disciplina != null)
+                        {
+                            var cargaHoraria = disciplina.CH;
+
+                            //somando 2 quando a carga horario é 40, pq vai ser visitada só uma vez
+                            //já as outras serão visitadas mais vezes
+                            if (cargaHoraria == 40 && disciplinasDaSemana.Count(x => x == codDis) == 1)
+                            {
+                                cromossomo.Nota = cromossomo.Nota + 2;
+                            }
+                            if (cargaHoraria == 80 && disciplinasDaSemana.Count(x => x == codDis) == 2)
+                            {
+                                cromossomo.Nota = cromossomo.Nota + 1;
+                            }
+
+                            if (cargaHoraria == 120 && disciplinasDaSemana.Count(x => x == codDis) == 3)
+                            {
+                                cromossomo.Nota = cromossomo.Nota + 1;
+                            }
+
+                        }
+
+                        
+                    }
+                }
+            }
         }
 
         private void VerificaDisponibilidadeProfessor(List<Cromossomo> populacao, InputData inputData)
@@ -58,14 +106,14 @@ namespace ClassSchedulingWithAG.Services
                 {
                     var disciplina = GetDisciplinaByCodigo(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i], inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
 
-                    if(disciplina != null)
+                    if (disciplina != null)
                     {
                         var nomeProfessor = disciplina.Professor;
 
                         Professor prof = GetProfessorByName(nomeProfessor, inputData.Professores);
 
                         //se ele não pode dar aula algum dia
-                        if (prof != null) 
+                        if (prof != null)
                         {
                             if (!prof.Disponibilidade.Segunda)
                             {
@@ -79,7 +127,8 @@ namespace ClassSchedulingWithAG.Services
                             {
                                 VerificaSeProfessorEstaEmAlgumaDisciplina(4, 5, nomeProfessor, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList(), cromossomo);
                             }
-                            if (!prof.Disponibilidade.Quinta) {
+                            if (!prof.Disponibilidade.Quinta)
+                            {
                                 VerificaSeProfessorEstaEmAlgumaDisciplina(6, 7, nomeProfessor, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList(), cromossomo);
                             }
                             if (!prof.Disponibilidade.Sexta)
@@ -92,7 +141,7 @@ namespace ClassSchedulingWithAG.Services
 
                         }
 
-                         
+
                         //verificar se alguma ele da aula
                         //caso de descontar um ponto da nota
                     }
@@ -105,9 +154,9 @@ namespace ClassSchedulingWithAG.Services
         {
             List<int> codPrimeiroESegundoPerido = new List<int>();
 
-            for (int i = 0; i < cromossomo.DiasDaSemanaECodigosDasDisciplinas.Length; i++) 
+            for (int i = 0; i < cromossomo.DiasDaSemanaECodigosDasDisciplinas.Length; i++)
             {
-                if(NumberEndsWith(i, periodo1) || NumberEndsWith(i, periodo2))
+                if (NumberEndsWith(i, periodo1) || NumberEndsWith(i, periodo2))
                 {
                     //add todas as disciplinas do dia
                     codPrimeiroESegundoPerido.Add(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]);
@@ -696,7 +745,7 @@ namespace ClassSchedulingWithAG.Services
 
         private Disciplina GetDisciplinaByCodigo(int codigoDisciplina, List<Disciplina> disciplinas)
         {
-            if(codigoDisciplina == 0)
+            if (codigoDisciplina == 0)
             {
                 return null;
             }
