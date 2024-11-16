@@ -50,7 +50,7 @@ namespace ClassSchedulingWithAG.Services
                 return cromossoSelecionado.DiasDaSemanaECodigosDasDisciplinas;
 
             List<Cromossomo> novaPopulacao = new List<Cromossomo>();
-            //esse 10 sera o item de qtnd cromossomos 
+            //esse 10 sera o item de qtnd cromossomos dividido por 2
             for(int i = 0; i < 5; i++)
             {
                 var pais = new List<Cromossomo>();
