@@ -23,9 +23,9 @@ namespace ClassSchedulingWithAG.Services
     //(verificar questão de turmas = ch 40 = 1 aula, 80 = 2 aulas, 120 = 3 aulas) feito
 
 
-    //seleção/cruzamento
+    //(seleção/cruzamento) feito
 
-    //mutacao
+    //(mutacao) feito
 
     public class AlgoritmoGeneticoService
     {
@@ -64,8 +64,56 @@ namespace ClassSchedulingWithAG.Services
                 novaPopulacao.AddRange(Cruzamento(pais[0], pais[1], 0.7));
             }
 
+            foreach (var cromossomo in novaPopulacao)
+            {
+                Mutacao(cromossomo, 0.05);
+            }
+
 
             return null;
+        }
+
+        // Função de mutação com uma probabilidade de 5%
+        public void Mutacao(Cromossomo cromossomo, double probabilidadeMutacao = 0.05)
+        {
+            var random = new Random();
+
+            int tamanho = cromossomo.DiasDaSemanaECodigosDasDisciplinas.Length;
+
+            var listDiasDaSemanaECodigosDasDisciplinas = cromossomo.DiasDaSemanaECodigosDasDisciplinas.ToList();
+
+            //quebro de 10 em 10 o array de horarios
+            var diasDaSemanaECodigosDasDisciplinasGrouped = listDiasDaSemanaECodigosDasDisciplinas
+            .Select((value, index) => new { value, index })
+            .GroupBy(x => x.index / 10)
+            .Select(g => g.Select(x => x.value).ToList())
+            .ToList();
+
+            for (int i = 0; i < tamanho; i++)
+            {
+                if (random.NextDouble() < probabilidadeMutacao)
+                {
+                    //pegar um valor que esteja contido entre o subarray de 10 posições 
+
+                    var sublistacom10disciplinas = diasDaSemanaECodigosDasDisciplinasGrouped.Find(x => x.Contains(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]));
+
+                    if (sublistacom10disciplinas != null)
+                    {
+
+                        int randomIndex = random.Next(sublistacom10disciplinas.Count);
+                        int randomNumber = sublistacom10disciplinas[randomIndex];
+
+                        while (randomNumber == cromossomo.DiasDaSemanaECodigosDasDisciplinas[i])
+                        {
+                            randomIndex = random.Next(sublistacom10disciplinas.Count);
+                            randomNumber = sublistacom10disciplinas[randomIndex];
+                        }
+
+                        cromossomo.DiasDaSemanaECodigosDasDisciplinas[i] = randomNumber;
+                    }
+
+                }
+            }
         }
 
         private List<Cromossomo> Cruzamento(Cromossomo pai1, Cromossomo pai2, double probabilidadeCruzamento)
@@ -983,56 +1031,6 @@ namespace ClassSchedulingWithAG.Services
             }
         }
 
-        // não sei se precisa da evolução, caso precise já temos alguma coisa.
-        private void Evolucao(InputData inputData)
-        {
-            int tamanhoPopulacao = 100;
-            int numeroDeGeracoes = 50;  
-            int quantidadeSelecao = 50;  
-
-            var populacao = new List<Cromossomo>();
-
-            
-            for (int i = 0; i < tamanhoPopulacao; i++)
-            {
-                var cromossomo = IniciaPopulacao(inputData);
-                populacao.Add(cromossomo);
-            }
-
-            for (int geracao = 0; geracao < numeroDeGeracoes; geracao++)
-            {
-                var novaPopulacao = new List<Cromossomo>();
-
-                // seleção dos cromossomos para o cruzamento
-                var cromossomosSelecionados = SelecionaCromossomos(populacao, quantidadeSelecao);
-
-                // Realiza o cruzamento para gerar novos cromossomos
-                foreach (var cromossomo in cromossomosSelecionados)
-                {
-                    var cromossomoFilho = Cruzamento(cromossomo);
-                    novaPopulacao.Add(cromossomoFilho);
-                }
-
-                // aplica a mutação nos cromossomos filhos
-                foreach (var cromossomo in novaPopulacao)
-                {
-                    Mutacao(cromossomo, inputData.Cursos);
-                }
-
-                // atualiza a população para a próxima geração
-                populacao = novaPopulacao;
-            }
-        }
-
-        private Cromossomo Cruzamento(Cromossomo cromossomoPai)
-        {
-            var cromossomoFilho = new Cromossomo
-            {
-                DiasDaSemanaECodigosDasDisciplinas = (int[])cromossomoPai.DiasDaSemanaECodigosDasDisciplinas.Clone()
-            };
-
-            return cromossomoFilho;
-        }
 
     }
 }
