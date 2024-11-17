@@ -110,15 +110,8 @@ namespace ClassSchedulingWithAG.Services
 
                     if (sublistacom10disciplinas != null)
                     {
-
                         int randomIndex = random.Next(sublistacom10disciplinas.Count);
                         int randomNumber = sublistacom10disciplinas[randomIndex];
-
-                        while (randomNumber == cromossomo.DiasDaSemanaECodigosDasDisciplinas[i])
-                        {
-                            randomIndex = random.Next(sublistacom10disciplinas.Count);
-                            randomNumber = sublistacom10disciplinas[randomIndex];
-                        }
 
                         cromossomo.DiasDaSemanaECodigosDasDisciplinas[i] = randomNumber;
                     }
