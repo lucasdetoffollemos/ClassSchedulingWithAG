@@ -33,6 +33,10 @@ namespace ClassSchedulingWithAG.Services
         public Cromossomo CalculaHOrariosComAlgoritmoGnético(InputData inputData, int cromossomos, int cromossomosPorElitismo, int probabilidadeCruzamento, int probabilidadeMutacao, int quantidadeMaxInteracoes, int interacoesSemMelhorias)
         {
             //converter as probabilidades por 100
+
+            var propabilidadeCruzamentoDouble = Convert.ToDouble(probabilidadeCruzamento) / 100;
+            var propabilidadeMutacaoDouble = Convert.ToDouble(probabilidadeMutacao) / 100;
+
             List<Cromossomo> populacaoComMairesNotas = new List<Cromossomo>();
             List<Cromossomo> populacao = new List<Cromossomo>();
 
@@ -73,12 +77,12 @@ namespace ClassSchedulingWithAG.Services
                     }
 
                     //probabilidade de cruzamento, valor que vai vir do front
-                    novaPopulacao.AddRange(Cruzamento(pais[0], pais[1], 0.7));
+                    novaPopulacao.AddRange(Cruzamento(pais[0], pais[1], propabilidadeMutacaoDouble));
                 }
 
                foreach (var cromossomo in novaPopulacao)
                 {
-                    Mutacao(cromossomo, inputData, 0.01);
+                    Mutacao(cromossomo, inputData, 0.005);
                 }
 
                 populacao.Clear();
@@ -160,7 +164,7 @@ namespace ClassSchedulingWithAG.Services
             return cursos.FirstOrDefault(x => x.Disciplinas.Any(d => d.Nome == nomeDisciplina && d.Professor == professorDisciplina && d.Fase == fase && d.CH == cH));
         }
 
-        private List<Cromossomo> Cruzamento(Cromossomo pai1, Cromossomo pai2, double probabilidadeCruzamento)
+        private List<Cromossomo> Cruzamento(Cromossomo pai1, Cromossomo pai2, double probabilidadeCruzamento = 0.7)
         {
 
             //var notaMaior = pai1.Nota > pai2.Nota ? pai1.Nota : pai2.Nota;
