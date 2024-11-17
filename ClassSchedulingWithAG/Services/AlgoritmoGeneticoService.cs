@@ -33,7 +33,7 @@ namespace ClassSchedulingWithAG.Services
         public Cromossomo CalculaHOrariosComAlgoritmoGnético(InputData inputData, int cromossomos, int cromossomosPorElitismo, int probabilidadeCruzamento, int probabilidadeMutacao, int quantidadeMaxInteracoes, int interacoesSemMelhorias)
         {
             //converter as probabilidades por 100
-
+            List<Cromossomo> populacaoComMairesNotas = new List<Cromossomo>();
             List<Cromossomo> populacao = new List<Cromossomo>();
 
             //esse 10 sera o item de qtnd cromossomos 
@@ -50,12 +50,17 @@ namespace ClassSchedulingWithAG.Services
                 if (cromossoSelecionado != null)
                     return cromossoSelecionado;
 
+                
                 //caso seja ultima iteração retornar o cromossomo com maior nota
-                if(i == quantidadeMaxInteracoes - 1)
+                if (i == quantidadeMaxInteracoes - 1)
                 {
-                    var notaMaior = populacao.Max(x => x.Nota);
-                    return populacao.SingleOrDefault(x => x.Nota == notaMaior);
+                    var notaMaior = populacaoComMairesNotas.Max(x => x.Nota);
+                    return populacaoComMairesNotas.FirstOrDefault(x => x.Nota == notaMaior);
                 }
+
+                var notaMaiorPopulacao = populacao.Max(x => x.Nota);
+                populacaoComMairesNotas.Add(populacao.FirstOrDefault(x => x.Nota == notaMaiorPopulacao));
+
                 List<Cromossomo> novaPopulacao = new List<Cromossomo>();
                 //esse 10 sera o item de qtnd cromossomos dividido por 2
                 for (int k = 0; k < cromossomos / 2; k++)
@@ -71,11 +76,10 @@ namespace ClassSchedulingWithAG.Services
                     novaPopulacao.AddRange(Cruzamento(pais[0], pais[1], 0.7));
                 }
 
-                foreach (var cromossomo in novaPopulacao)
+               /*foreach (var cromossomo in novaPopulacao)
                 {
-                    Mutacao(cromossomo, 0.05);
-                }
-                
+                    Mutacao(cromossomo, inputData, 0.01);
+                }*/
 
                 populacao.Clear();
                 populacao.AddRange(novaPopulacao);
@@ -85,7 +89,7 @@ namespace ClassSchedulingWithAG.Services
         }
 
         // Função de mutação com uma probabilidade de 5%
-        public void Mutacao(Cromossomo cromossomo, double probabilidadeMutacao = 0.05)
+        public void Mutacao(Cromossomo cromossomo, InputData inputData, double probabilidadeMutacao = 0.001)
         {
             var random = new Random();
 
@@ -101,23 +105,59 @@ namespace ClassSchedulingWithAG.Services
             .ToList();
 
             for (int i = 0; i < tamanho; i++)
-            {
-                if (random.NextDouble() < probabilidadeMutacao)
-                {
+             {
+                 var teste = random.NextDouble();
+
+                 if (teste < probabilidadeMutacao)
+                 {
                     //pegar um valor que esteja contido entre o subarray de 10 posições 
 
-                    var sublistacom10disciplinas = diasDaSemanaECodigosDasDisciplinasGrouped.Find(x => x.Contains(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]));
+                    //pegar a disciplina pelo código
+                    //pegar o curso que conten essa disciplina com essa carga horario e fase e professor
+                    //pegar todas os codigos das disciplinas daquele curso e daquela faze
 
-                    if (sublistacom10disciplinas != null)
+                    var disciplina = GetDisciplinaByCodigo(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i], inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
+
+                    if (disciplina == null)
+                        continue;
+
+                    var curso = GetCursoByDisciplina(inputData.Cursos, disciplina.Nome, disciplina.Professor, disciplina.Fase, disciplina.CH);
+
+                    if(curso != null)
                     {
-                        int randomIndex = random.Next(sublistacom10disciplinas.Count);
-                        int randomNumber = sublistacom10disciplinas[randomIndex];
+                        var disciplinasBaseadoNaFaseDoCurso = GetDisciplinasByFase(disciplina.Fase, curso.Disciplinas);
 
-                        cromossomo.DiasDaSemanaECodigosDasDisciplinas[i] = randomNumber;
+                        if(disciplinasBaseadoNaFaseDoCurso.Count > 0)
+                        {
+                            int randomIndex = random.Next(disciplinasBaseadoNaFaseDoCurso.Count);
+                            int randomNumber = disciplinasBaseadoNaFaseDoCurso[randomIndex].Codigo;
+
+                            cromossomo.DiasDaSemanaECodigosDasDisciplinas[i] = randomNumber;
+                        }
                     }
 
-                }
-            }
+                     /*var sublistacom10disciplinas = diasDaSemanaECodigosDasDisciplinasGrouped.Find(x => x.Contains(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]));
+
+                     if (sublistacom10disciplinas != null)
+                     {
+                         int randomIndex = random.Next(sublistacom10disciplinas.Count);
+                         int randomNumber = sublistacom10disciplinas[randomIndex];
+
+                         cromossomo.DiasDaSemanaECodigosDasDisciplinas[i] = randomNumber;
+                     }*/
+
+                 }
+             }
+        }
+
+        private List<Disciplina> GetDisciplinasByFase(int fase, List<Disciplina> disciplinas)
+        {
+            return disciplinas.Where(x => x.Fase == fase).ToList();
+        }
+
+        private Curso GetCursoByDisciplina(List<Curso> cursos, string nomeDisciplina, string professorDisciplina, int fase, int cH)
+        {
+            return cursos.FirstOrDefault(x => x.Disciplinas.Any(d => d.Nome == nomeDisciplina && d.Professor == professorDisciplina && d.Fase == fase && d.CH == cH));
         }
 
         private List<Cromossomo> Cruzamento(Cromossomo pai1, Cromossomo pai2, double probabilidadeCruzamento)
@@ -131,8 +171,8 @@ namespace ClassSchedulingWithAG.Services
                 // Se não ocorrer cruzamento, os filhos são cópias dos pais
                 return new List<Cromossomo>
                 {
-                new Cromossomo { DiasDaSemanaECodigosDasDisciplinas = (int[])pai1.DiasDaSemanaECodigosDasDisciplinas.Clone(), Nota = pai1.Nota },
-                new Cromossomo { DiasDaSemanaECodigosDasDisciplinas = (int[])pai2.DiasDaSemanaECodigosDasDisciplinas.Clone(), Nota = pai2.Nota }
+                new Cromossomo { DiasDaSemanaECodigosDasDisciplinas = (int[])pai1.DiasDaSemanaECodigosDasDisciplinas.Clone(), Nota = 1000 },
+                new Cromossomo { DiasDaSemanaECodigosDasDisciplinas = (int[])pai2.DiasDaSemanaECodigosDasDisciplinas.Clone(), Nota = 1000 }
                 };
             }
 
@@ -218,6 +258,8 @@ namespace ClassSchedulingWithAG.Services
                 .Select(g => g.Select(x => x.value).ToList())
                 .ToList();
 
+
+
                 foreach (var disciplinasDaSemana in diasDaSemanaECodigosDasDisciplinasGrouped)
                 {
                     foreach (var codDis in disciplinasDaSemana)
@@ -230,18 +272,18 @@ namespace ClassSchedulingWithAG.Services
 
                             //somando 2 quando a carga horario é 40, pq vai ser visitada só uma vez
                             //já as outras serão visitadas mais vezes
-                            if (cargaHoraria == 40 && disciplinasDaSemana.Count(x => x == codDis) == 1)
+                            if (cargaHoraria == 40 && disciplinasDaSemana.Count(x => x == codDis) != 1)
                             {
-                                cromossomo.Nota = cromossomo.Nota + 2;
+                                cromossomo.Nota = cromossomo.Nota - 1;
                             }
-                            if (cargaHoraria == 80 && disciplinasDaSemana.Count(x => x == codDis) == 2)
+                            if (cargaHoraria == 80 && disciplinasDaSemana.Count(x => x == codDis) != 2)
                             {
-                                cromossomo.Nota = cromossomo.Nota + 1;
+                                cromossomo.Nota = cromossomo.Nota - 1;
                             }
 
-                            if (cargaHoraria == 120 && disciplinasDaSemana.Count(x => x == codDis) == 3)
+                            if (cargaHoraria == 120 && disciplinasDaSemana.Count(x => x == codDis) != 3)
                             {
-                                cromossomo.Nota = cromossomo.Nota + 1;
+                                cromossomo.Nota = cromossomo.Nota - 1;
                             }
 
                         }
