@@ -76,10 +76,10 @@ namespace ClassSchedulingWithAG.Services
                     novaPopulacao.AddRange(Cruzamento(pais[0], pais[1], 0.7));
                 }
 
-               /*foreach (var cromossomo in novaPopulacao)
+               foreach (var cromossomo in novaPopulacao)
                 {
                     Mutacao(cromossomo, inputData, 0.01);
-                }*/
+                }
 
                 populacao.Clear();
                 populacao.AddRange(novaPopulacao);
