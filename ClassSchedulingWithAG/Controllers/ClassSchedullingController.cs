@@ -46,7 +46,7 @@ namespace ClassSchedulingWithAG.Controllers
 
                     var algoritmoGenetico = new AlgoritmoGeneticoService();
 
-                    algoritmoGenetico.CalculaHOrariosComAlgoritmoGnético(inputData);
+                    var cromossomSelecionado = algoritmoGenetico.CalculaHOrariosComAlgoritmoGnético(inputData, data.Cromossomos, data.CromossomosPorElitismo, data.ProbabilidadeCruzamento, data.ProbabilidadeMutacao, data.QuantidadeMaxInteracoes, data.InteracoesSemMelhorias);
                 }
 
                 return Ok("File processed successfully.");

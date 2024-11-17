@@ -3,6 +3,7 @@ using ClassSchedulingWithAG.ViewModels;
 using Microsoft.AspNetCore.Components.Forms;
 using System;
 using System.Runtime.Intrinsics.X86;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ClassSchedulingWithAG.Services
 {
@@ -29,46 +30,56 @@ namespace ClassSchedulingWithAG.Services
 
     public class AlgoritmoGeneticoService
     {
-        public int[] CalculaHOrariosComAlgoritmoGnético(InputData inputData)
+        public Cromossomo CalculaHOrariosComAlgoritmoGnético(InputData inputData, int cromossomos, int cromossomosPorElitismo, int probabilidadeCruzamento, int probabilidadeMutacao, int quantidadeMaxInteracoes, int interacoesSemMelhorias)
         {
+            //converter as probabilidades por 100
 
             List<Cromossomo> populacao = new List<Cromossomo>();
 
             //esse 10 sera o item de qtnd cromossomos 
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < cromossomos; i++)
             {
                 populacao.Add(IniciaPopulacao(inputData));
             }
 
             //aqui teremo um for com a qntd max de iterações
-
-            Fitness(populacao, inputData);
-
-            var cromossoSelecionado = populacao.SingleOrDefault(x => x.Nota == 1000);
-
-            if (cromossoSelecionado != null)
-                return cromossoSelecionado.DiasDaSemanaECodigosDasDisciplinas;
-
-            List<Cromossomo> novaPopulacao = new List<Cromossomo>();
-            //esse 10 sera o item de qtnd cromossomos dividido por 2
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < quantidadeMaxInteracoes; i++)
             {
-                var pais = new List<Cromossomo>();
-                for (int j = 0; j < 2; j++)
+                Fitness(populacao, inputData);
+                var cromossoSelecionado = populacao.SingleOrDefault(x => x.Nota == 1000);
+                if (cromossoSelecionado != null)
+                    return cromossoSelecionado;
+
+                //caso seja ultima iteração retornar o cromossomo com maior nota
+                if(i == quantidadeMaxInteracoes - 1)
                 {
-                    var cromossomoPai = Selecao(populacao);
-                    pais.Add(cromossomoPai);
+                    var notaMaior = populacao.Max(x => x.Nota);
+                    return populacao.SingleOrDefault(x => x.Nota == notaMaior);
+                }
+                List<Cromossomo> novaPopulacao = new List<Cromossomo>();
+                //esse 10 sera o item de qtnd cromossomos dividido por 2
+                for (int k = 0; k < cromossomos / 2; k++)
+                {
+                    var pais = new List<Cromossomo>();
+                    for (int j = 0; j < 2; j++)
+                    {
+                        var cromossomoPai = Selecao(populacao);
+                        pais.Add(cromossomoPai);
+                    }
+
+                    //probabilidade de cruzamento, valor que vai vir do front
+                    novaPopulacao.AddRange(Cruzamento(pais[0], pais[1], 0.7));
                 }
 
-                //probabilidade de cruzamento, valor que vai vir do front
-                novaPopulacao.AddRange(Cruzamento(pais[0], pais[1], 0.7));
-            }
+                foreach (var cromossomo in novaPopulacao)
+                {
+                    Mutacao(cromossomo, 0.05);
+                }
+                
 
-            foreach (var cromossomo in novaPopulacao)
-            {
-                Mutacao(cromossomo, 0.05);
+                populacao.Clear();
+                populacao.AddRange(novaPopulacao);
             }
-
 
             return null;
         }
@@ -118,6 +129,8 @@ namespace ClassSchedulingWithAG.Services
 
         private List<Cromossomo> Cruzamento(Cromossomo pai1, Cromossomo pai2, double probabilidadeCruzamento)
         {
+
+            //var notaMaior = pai1.Nota > pai2.Nota ? pai1.Nota : pai2.Nota;
             var random = new Random();
             // Verifica se o cruzamento ocorre com base na probabilidade
             if (random.NextDouble() > probabilidadeCruzamento)
@@ -125,8 +138,8 @@ namespace ClassSchedulingWithAG.Services
                 // Se não ocorrer cruzamento, os filhos são cópias dos pais
                 return new List<Cromossomo>
                 {
-                new Cromossomo { DiasDaSemanaECodigosDasDisciplinas = (int[])pai1.DiasDaSemanaECodigosDasDisciplinas.Clone() },
-                new Cromossomo { DiasDaSemanaECodigosDasDisciplinas = (int[])pai2.DiasDaSemanaECodigosDasDisciplinas.Clone() }
+                new Cromossomo { DiasDaSemanaECodigosDasDisciplinas = (int[])pai1.DiasDaSemanaECodigosDasDisciplinas.Clone(), Nota = pai1.Nota },
+                new Cromossomo { DiasDaSemanaECodigosDasDisciplinas = (int[])pai2.DiasDaSemanaECodigosDasDisciplinas.Clone(), Nota = pai2.Nota }
                 };
             }
 
