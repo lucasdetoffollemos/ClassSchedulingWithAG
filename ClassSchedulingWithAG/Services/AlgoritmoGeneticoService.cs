@@ -69,8 +69,6 @@ namespace ClassSchedulingWithAG.Services
                     return cromossoSelecionado;
                 }
 
-
-
                 //caso seja ultima iteração retornar o cromossomo com maior nota
                 if (i == quantidadeMaxInteracoes - 1)
                 {
@@ -85,17 +83,26 @@ namespace ClassSchedulingWithAG.Services
 
                 }
 
+                //pega os cromossomos por elitismo
+                //ordena por nota maior até a menor
+                //seleciona uma quantidade de cromossomos, que é igual a de cromossomos por elitsmo
+                //adicionar numa lista esses cromossomos
+                var listaDeCromossomosPorElitismoOrdenados = populacao.OrderByDescending(x => x.Nota).Take(cromossomosPorElitismo).ToList();
+
+
+
                 var notaMaiorPopulacao = populacao.Max(x => x.Nota);
                 populacaoComMairesNotas.Add(populacao.FirstOrDefault(x => x.Nota == notaMaiorPopulacao));
 
                 List<Cromossomo> novaPopulacao = new List<Cromossomo>();
-                //esse 10 sera o item de qtnd cromossomos dividido por 2
-                for (int k = 0; k < cromossomos / 2; k++)
+                //diminur o valor de cromossomos com o valor de cromossomos por elitismo
+                //ex: (cromossomos - cromossomoPorElitismo) /2
+                for (int k = 0; k < (cromossomos - cromossomosPorElitismo) / 2; k++)
                 {
                     var pais = new List<Cromossomo>();
                     for (int j = 0; j < 2; j++)
                     {
-                        var cromossomoPai = Selecao(populacao);
+                        var cromossomoPai = Selecao(populacao.OrderByDescending(x => x.Nota).Skip(cromossomosPorElitismo).ToList());
                         pais.Add(cromossomoPai);
                     }
 
@@ -110,7 +117,10 @@ namespace ClassSchedulingWithAG.Services
 
                 populacao.Clear();
                 populacao.AddRange(novaPopulacao);
-            }
+                listaDeCromossomosPorElitismoOrdenados.ForEach(x => x.Nota = 1000);
+                populacao.AddRange(listaDeCromossomosPorElitismoOrdenados);
+                listaDeCromossomosPorElitismoOrdenados.Clear(); 
+            } 
 
             stopwatch.Stop();
             return null;
