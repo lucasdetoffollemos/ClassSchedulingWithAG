@@ -89,8 +89,6 @@ namespace ClassSchedulingWithAG.Services
                 //adicionar numa lista esses cromossomos
                 var listaDeCromossomosPorElitismoOrdenados = populacao.OrderByDescending(x => x.Nota).Take(cromossomosPorElitismo).ToList();
 
-
-
                 var notaMaiorPopulacao = populacao.Max(x => x.Nota);
                 populacaoComMairesNotas.Add(populacao.FirstOrDefault(x => x.Nota == notaMaiorPopulacao));
 
@@ -107,12 +105,12 @@ namespace ClassSchedulingWithAG.Services
                     }
 
                     //probabilidade de cruzamento, valor que vai vir do front
-                    novaPopulacao.AddRange(Cruzamento(pais[0], pais[1], propabilidadeMutacaoDouble));
+                    novaPopulacao.AddRange(Cruzamento(pais[0], pais[1], propabilidadeCruzamentoDouble));
                 }
 
                 foreach (var cromossomo in novaPopulacao)
                 {
-                    Mutacao(cromossomo, inputData, 0.005);
+                    Mutacao(cromossomo, inputData, propabilidadeMutacaoDouble);
                 }
 
                 populacao.Clear();
