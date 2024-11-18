@@ -330,7 +330,7 @@ namespace ClassSchedulingWithAG.Services
             }
         }
         // 
-        private void VerificaDisponibilidadeProfessor(List<Cromossomo> populacao, InputData inputData)
+        public void VerificaDisponibilidadeProfessor(List<Cromossomo> populacao, InputData inputData)
         {
             foreach (var cromossomo in populacao)
             {
@@ -382,7 +382,7 @@ namespace ClassSchedulingWithAG.Services
             }
         }
 
-        private void VerificaSeProfessorEstaEmAlgumaDisciplina(int periodo1, int periodo2, string nomeProfessor, List<Disciplina> disciplinas, Cromossomo cromossomo)
+        public void VerificaSeProfessorEstaEmAlgumaDisciplina(int periodo1, int periodo2, string nomeProfessor, List<Disciplina> disciplinas, Cromossomo cromossomo)
         {
             List<int> codPrimeiroESegundoPerido = new List<int>();
 
@@ -1032,7 +1032,7 @@ namespace ClassSchedulingWithAG.Services
             return cromossomo;
         }
 
-        private int[] GeraHorariosAleatorios(List<int> disciplinasPorFase, string nomeCurso)
+        public int[] GeraHorariosAleatorios(List<int> disciplinasPorFase, string nomeCurso)
         {
             var random = new Random();
             var disciplinaAleatorias = new int[10];
@@ -1186,6 +1186,11 @@ namespace ClassSchedulingWithAG.Services
 
 
                 return "Sexta-feira";
+        }
+
+        public object CalculaHorariosComAlgoritmoGenetico(InputData inputData, int cromossomos, int cromossomosPorElitismo, int probabilidadeCruzamento, int probabilidadeMutacao, int quantidadeMaxInteracoes, int interacoesSemMelhorias)
+        {
+            throw new NotImplementedException();
         }
 
         #endregion
