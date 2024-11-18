@@ -1,6 +1,7 @@
 using ClassSchedulingWithAG.Models;
 using ClassSchedulingWithAG.Services;
 using ClassSchedulingWithAG.ViewModels;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 
@@ -8,9 +9,9 @@ namespace ClassSchedulingWithAG.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [EnableCors("AllowSpecificOrigin")]
     public class ClassSchedullingController : ControllerBase
     {
-      
         private readonly ILogger<ClassSchedullingController> _logger;
 
         public ClassSchedullingController(ILogger<ClassSchedullingController> logger)
@@ -48,18 +49,18 @@ namespace ClassSchedulingWithAG.Controllers
 
                     var cromossomSelecionado = algoritmoGenetico.CalculaHOrariosComAlgoritmoGnético(inputData, data.Cromossomos, data.CromossomosPorElitismo, data.ProbabilidadeCruzamento, data.ProbabilidadeMutacao, data.QuantidadeMaxInteracoes, data.InteracoesSemMelhorias);
 
-                    if(cromossomSelecionado == null)
+                    if (cromossomSelecionado == null)
                     {
-                        return BadRequest($"Response null");
-
+                        return BadRequest("Response null");
                     }
 
-
-                    var dataToSend = new DataToSend();
-                    dataToSend.NotaDoMaiorCromosso = cromossomSelecionado.Nota;
-                    dataToSend.QuantidadeDeIterações = cromossomSelecionado.QuantidadeDeIterações;
-                    dataToSend.TempoDeExecuçãoEmMinutos = cromossomSelecionado.TempoDeExecuçãoEmMinutos;
-                    dataToSend.Cursos = algoritmoGenetico.GeraHorarios(cromossomSelecionado.DiasDaSemanaECodigosDasDisciplinas, inputData.Cursos);
+                    var dataToSend = new DataToSend
+                    {
+                        NotaDoMaiorCromosso = cromossomSelecionado.Nota,
+                        QuantidadeDeIterações = cromossomSelecionado.QuantidadeDeIterações,
+                        TempoDeExecuçãoEmMinutos = cromossomSelecionado.TempoDeExecuçãoEmMinutos,
+                        Cursos = algoritmoGenetico.GeraHorarios(cromossomSelecionado.DiasDaSemanaECodigosDasDisciplinas, inputData.Cursos)
+                    };
 
                     return Ok(dataToSend);
                 }
