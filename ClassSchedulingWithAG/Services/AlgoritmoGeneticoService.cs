@@ -44,7 +44,7 @@ namespace ClassSchedulingWithAG.Services
 
             List<Cromossomo> populacaoComMairesNotas = new List<Cromossomo>();
             List<Cromossomo> populacao = new List<Cromossomo>();
-
+            int quantidadeDeIteracoesSemMelhorias = 0;
             //esse 10 sera o item de qtnd cromossomos 
             for (int i = 0; i < cromossomos; i++)
             {
@@ -74,13 +74,13 @@ namespace ClassSchedulingWithAG.Services
                 {
                     var notaMaior = populacaoComMairesNotas.Max(x => x.Nota);
                     stopwatch.Stop();
+
                     var cromossomoSelcionado = populacaoComMairesNotas.FirstOrDefault(x => x.Nota == notaMaior);
 
                     cromossomoSelcionado.TempoDeExecuçãoEmMinutos = stopwatch.Elapsed.TotalMinutes;
                     cromossomoSelcionado.QuantidadeDeIterações = i + 1;
 
                     return cromossomoSelcionado;
-
                 }
 
                 //pega os cromossomos por elitismo
@@ -89,8 +89,38 @@ namespace ClassSchedulingWithAG.Services
                 //adicionar numa lista esses cromossomos
                 var listaDeCromossomosPorElitismoOrdenados = populacao.OrderByDescending(x => x.Nota).Take(cromossomosPorElitismo).ToList();
 
+
                 var notaMaiorPopulacao = populacao.Max(x => x.Nota);
                 populacaoComMairesNotas.Add(populacao.FirstOrDefault(x => x.Nota == notaMaiorPopulacao));
+
+                //verificar iterações sem melhorias, caso a nota mais alta da população atual seja menor ou igual
+                //a nota da populacaoComMairesNotas, incrementar um, caso atinja o valor, pegar a maior nota e retornar
+                if(interacoesSemMelhorias > 0)
+                {
+                    var notaMenorPopulacaoComMairesNotas = populacaoComMairesNotas.Min(x => x.Nota);
+
+                    if (notaMaiorPopulacao <= notaMenorPopulacaoComMairesNotas)
+                    {
+                        quantidadeDeIteracoesSemMelhorias++;
+
+                        if (quantidadeDeIteracoesSemMelhorias >= interacoesSemMelhorias)
+                        {
+                            var notaMaior = populacaoComMairesNotas.Max(x => x.Nota);
+                            stopwatch.Stop();
+
+                            var cromossomoSelcionado = populacaoComMairesNotas.FirstOrDefault(x => x.Nota == notaMaior);
+
+                            cromossomoSelcionado.TempoDeExecuçãoEmMinutos = stopwatch.Elapsed.TotalMinutes;
+                            cromossomoSelcionado.QuantidadeDeIterações = i + 1;
+
+                            return cromossomoSelcionado;
+                        }
+                    }
+                    else
+                    {
+                        quantidadeDeIteracoesSemMelhorias = 0;
+                    }
+                }
 
                 List<Cromossomo> novaPopulacao = new List<Cromossomo>();
                 //diminur o valor de cromossomos com o valor de cromossomos por elitismo
@@ -269,8 +299,6 @@ namespace ClassSchedulingWithAG.Services
 
             // Retorna o último cromossomo por segurança (caso a roleta não tenha selecionado antes)
             return populacao.Last();
-
-
         }
 
         private void Fitness(List<Cromossomo> populacao, InputData inputData)
