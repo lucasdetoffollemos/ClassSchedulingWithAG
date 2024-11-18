@@ -2,6 +2,7 @@
 using ClassSchedulingWithAG.ViewModels;
 using Microsoft.AspNetCore.Components.Forms;
 using System;
+using System.Diagnostics;
 using System.Runtime.Intrinsics.X86;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -30,8 +31,12 @@ namespace ClassSchedulingWithAG.Services
 
     public class AlgoritmoGeneticoService
     {
+        private Stopwatch stopwatch = new Stopwatch();
+
+        #region input
         public Cromossomo CalculaHOrariosComAlgoritmoGnético(InputData inputData, int cromossomos, int cromossomosPorElitismo, int probabilidadeCruzamento, int probabilidadeMutacao, int quantidadeMaxInteracoes, int interacoesSemMelhorias)
         {
+            stopwatch.Start();
             //converter as probabilidades por 100
 
             var propabilidadeCruzamentoDouble = Convert.ToDouble(probabilidadeCruzamento) / 100;
@@ -45,21 +50,39 @@ namespace ClassSchedulingWithAG.Services
             {
                 populacao.Add(IniciaPopulacao(inputData));
             }
-
+            int quantidadeDeIterações = 0;
+            int notaDoMelhorCromossomo = 0;
+            double tempoDeExecucaoEmMinutos = 0;
             //aqui teremo um for com a qntd max de iterações
             for (int i = 0; i < quantidadeMaxInteracoes; i++)
             {
+                quantidadeDeIterações++;
+
                 Fitness(populacao, inputData);
                 var cromossoSelecionado = populacao.SingleOrDefault(x => x.Nota == 1000);
                 if (cromossoSelecionado != null)
-                    return cromossoSelecionado;
+                {
+                    stopwatch.Stop();
 
-                
+                    cromossoSelecionado.TempoDeExecuçãoEmMinutos = stopwatch.Elapsed.TotalMinutes;
+                    cromossoSelecionado.QuantidadeDeIterações = i + 1;
+                    return cromossoSelecionado;
+                }
+
+
+
                 //caso seja ultima iteração retornar o cromossomo com maior nota
                 if (i == quantidadeMaxInteracoes - 1)
                 {
                     var notaMaior = populacaoComMairesNotas.Max(x => x.Nota);
-                    return populacaoComMairesNotas.FirstOrDefault(x => x.Nota == notaMaior);
+                    stopwatch.Stop();
+                    var cromossomoSelcionado = populacaoComMairesNotas.FirstOrDefault(x => x.Nota == notaMaior);
+
+                    cromossomoSelcionado.TempoDeExecuçãoEmMinutos = stopwatch.Elapsed.TotalMinutes;
+                    cromossomoSelcionado.QuantidadeDeIterações = i + 1;
+
+                    return cromossomoSelcionado;
+
                 }
 
                 var notaMaiorPopulacao = populacao.Max(x => x.Nota);
@@ -80,7 +103,7 @@ namespace ClassSchedulingWithAG.Services
                     novaPopulacao.AddRange(Cruzamento(pais[0], pais[1], propabilidadeMutacaoDouble));
                 }
 
-               foreach (var cromossomo in novaPopulacao)
+                foreach (var cromossomo in novaPopulacao)
                 {
                     Mutacao(cromossomo, inputData, 0.005);
                 }
@@ -89,6 +112,7 @@ namespace ClassSchedulingWithAG.Services
                 populacao.AddRange(novaPopulacao);
             }
 
+            stopwatch.Stop();
             return null;
         }
 
@@ -109,11 +133,11 @@ namespace ClassSchedulingWithAG.Services
             .ToList();
 
             for (int i = 0; i < tamanho; i++)
-             {
-                 var teste = random.NextDouble();
+            {
+                var teste = random.NextDouble();
 
-                 if (teste < probabilidadeMutacao)
-                 {
+                if (teste < probabilidadeMutacao)
+                {
                     //pegar um valor que esteja contido entre o subarray de 10 posições 
 
                     //pegar a disciplina pelo código
@@ -127,11 +151,11 @@ namespace ClassSchedulingWithAG.Services
 
                     var curso = GetCursoByDisciplina(inputData.Cursos, disciplina.Nome, disciplina.Professor, disciplina.Fase, disciplina.CH);
 
-                    if(curso != null)
+                    if (curso != null)
                     {
                         var disciplinasBaseadoNaFaseDoCurso = GetDisciplinasByFase(disciplina.Fase, curso.Disciplinas);
 
-                        if(disciplinasBaseadoNaFaseDoCurso.Count > 0)
+                        if (disciplinasBaseadoNaFaseDoCurso.Count > 0)
                         {
                             int randomIndex = random.Next(disciplinasBaseadoNaFaseDoCurso.Count);
                             int randomNumber = disciplinasBaseadoNaFaseDoCurso[randomIndex].Codigo;
@@ -140,18 +164,18 @@ namespace ClassSchedulingWithAG.Services
                         }
                     }
 
-                     /*var sublistacom10disciplinas = diasDaSemanaECodigosDasDisciplinasGrouped.Find(x => x.Contains(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]));
+                    /*var sublistacom10disciplinas = diasDaSemanaECodigosDasDisciplinasGrouped.Find(x => x.Contains(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]));
 
-                     if (sublistacom10disciplinas != null)
-                     {
-                         int randomIndex = random.Next(sublistacom10disciplinas.Count);
-                         int randomNumber = sublistacom10disciplinas[randomIndex];
+                    if (sublistacom10disciplinas != null)
+                    {
+                        int randomIndex = random.Next(sublistacom10disciplinas.Count);
+                        int randomNumber = sublistacom10disciplinas[randomIndex];
 
-                         cromossomo.DiasDaSemanaECodigosDasDisciplinas[i] = randomNumber;
-                     }*/
+                        cromossomo.DiasDaSemanaECodigosDasDisciplinas[i] = randomNumber;
+                    }*/
 
-                 }
-             }
+                }
+            }
         }
 
         private List<Disciplina> GetDisciplinasByFase(int fase, List<Disciplina> disciplinas)
@@ -1082,7 +1106,80 @@ namespace ClassSchedulingWithAG.Services
                 cromossomo.DiasDaSemanaECodigosDasDisciplinas[indiceGene] = disciplinaAleatoria.Codigo;
             }
         }
+        #endregion
+
+        #region outputs
+        public List<CursoDTO> GeraHorarios(int[] diasDaSemanaECodigosDasDisciplinas, List<Curso> cursos)
+        {
+            var cursosDTO = new List<CursoDTO>();
+            //quebro de 10 em 10 o array de horarios
+            var listDiasDaSemanaECodigosDasDisciplinas = diasDaSemanaECodigosDasDisciplinas.ToList();
+
+            var diasDaSemanaECodigosDasDisciplinasGrouped = listDiasDaSemanaECodigosDasDisciplinas
+            .Select((value, index) => new { value, index })
+            .GroupBy(x => x.index / 10)
+            .Select(g => g.Select(x => x.value).ToList())
+            .ToList();
+
+            foreach (var fasesCursos in diasDaSemanaECodigosDasDisciplinasGrouped)
+            {
+                var cursoDTO = new CursoDTO();
+
+                var codPrimeiraDisciplina = fasesCursos[0];
+
+                Disciplina disciplina = null;
+                
+                for (int i = 0; i < fasesCursos.Count; i++)
+                {
+                    disciplina = GetDisciplinaByCodigo(fasesCursos[i], cursos.SelectMany(x => x.Disciplinas).ToList());
+
+                    if (disciplina == null)
+                        continue;
+
+                    var disciplinaDto = new DisciplinaDTO();
+                    disciplinaDto.Periodo = i % 2 == 0 ? "Primeiro Periodo" : "Segundo Periodo";
+                    disciplinaDto.NomeDisciplina = disciplina.Nome;
+                    disciplinaDto.NomeProfessor = disciplina.Professor;
+                    disciplinaDto.Fase = disciplina.Fase;
+                    disciplinaDto.CH = disciplina.CH;
+                    disciplinaDto.Dia = GetDayByI(i);
+
+                    cursoDTO.Disciplinas.Add(disciplinaDto);
+                }
+
+                if(disciplina != null)
+                {
+                    var curso = GetCursoByDisciplina(cursos, disciplina.Nome, disciplina.Professor, disciplina.Fase, disciplina.CH);
+
+                    cursoDTO.NomeCurso = curso.Nome;
+
+                    cursosDTO.Add(cursoDTO);
+                }
+                
+            }
+
+            return cursosDTO;
+        }
+
+        private string GetDayByI(int i)
+        {
+
+            if (i == 0 || i == 1)
+                return "Segunda-feira";
+
+            if (i == 2 || i == 3)
+                return "Terça-feira";
+
+            if (i == 4 || i == 5)
+                return "Quarta-feira";
+
+            if (i == 6 || i == 7)
+                return "Quinta-feira";
 
 
+                return "Sexta-feira";
+        }
+
+        #endregion
     }
 }

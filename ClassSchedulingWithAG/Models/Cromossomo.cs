@@ -2,6 +2,10 @@
 {
     public class Cromossomo
     {
+        public int QuantidadeDeIterações { get; set; }
+
+        public double TempoDeExecuçãoEmMinutos { get; set; }
+
         public int Nota {  get; set; }
 
        public int[] DiasDaSemanaECodigosDasDisciplinas { get; set; }

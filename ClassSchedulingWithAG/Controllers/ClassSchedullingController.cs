@@ -55,12 +55,14 @@ namespace ClassSchedulingWithAG.Controllers
                     }
 
 
+                    var dataToSend = new DataToSend();
+                    dataToSend.NotaDoMaiorCromosso = cromossomSelecionado.Nota;
+                    dataToSend.QuantidadeDeIterações = cromossomSelecionado.QuantidadeDeIterações;
+                    dataToSend.TempoDeExecuçãoEmMinutos = cromossomSelecionado.TempoDeExecuçãoEmMinutos;
+                    dataToSend.Cursos = algoritmoGenetico.GeraHorarios(cromossomSelecionado.DiasDaSemanaECodigosDasDisciplinas, inputData.Cursos);
 
-
-
+                    return Ok(dataToSend);
                 }
-
-                return Ok("File processed successfully.");
             }
             catch (JsonException ex)
             {
