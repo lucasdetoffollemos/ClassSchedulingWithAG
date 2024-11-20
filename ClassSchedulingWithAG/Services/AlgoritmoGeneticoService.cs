@@ -395,15 +395,7 @@ namespace ClassSchedulingWithAG.Services
                             {
                                 VerificaSeProfessorEstaEmAlgumaDisciplina(8, 9, nomeProfessor, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList(), cromossomo);
                             }
-
-
-
-
                         }
-
-
-                        //verificar se alguma ele da aula
-                        //caso de descontar um ponto da nota
                     }
 
                 }
@@ -982,8 +974,10 @@ namespace ClassSchedulingWithAG.Services
 
                 //somar todos as notas de professores que tem conflito e diminuir do cromossomo
                 var notaGeralTarde = professoresESuasNotasTarde.Values.Where(x => x > 1).Sum();
+                
+                var notaGeral = Math.Max(notaGeralManha, notaGeralTarde);
 
-                cromossomo.Nota = cromossomo.Nota - (notaGeralManha + notaGeralTarde);
+                cromossomo.Nota = cromossomo.Nota - notaGeral;
             }
         }
 
@@ -1054,7 +1048,6 @@ namespace ClassSchedulingWithAG.Services
                 }
             }
 
-            // Defina a nota de forma mais dinâmica, caso necessário (aqui apenas um valor fixo)
             cromossomo.Nota = 1000;
 
             return cromossomo;
