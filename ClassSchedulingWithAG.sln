@@ -5,6 +5,8 @@ VisualStudioVersion = 17.11.35312.102
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClassSchedulingWithAG", "ClassSchedulingWithAG\ClassSchedulingWithAG.csproj", "{8CAFE337-18C4-4748-84C8-BD18BDF18BBD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestesUnitarios", "TestesUnitarios\TestesUnitarios.csproj", "{D2FABFF4-0760-476F-B49D-D677C588BCC8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{8CAFE337-18C4-4748-84C8-BD18BDF18BBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8CAFE337-18C4-4748-84C8-BD18BDF18BBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8CAFE337-18C4-4748-84C8-BD18BDF18BBD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D2FABFF4-0760-476F-B49D-D677C588BCC8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D2FABFF4-0760-476F-B49D-D677C588BCC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D2FABFF4-0760-476F-B49D-D677C588BCC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D2FABFF4-0760-476F-B49D-D677C588BCC8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
