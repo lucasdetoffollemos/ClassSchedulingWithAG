@@ -33,11 +33,14 @@ namespace ClassSchedulingWithAG.Services
     {
         private Stopwatch stopwatch = new Stopwatch();
 
+        private static List<Disciplina> Disciplinas;
         #region input
         public Cromossomo CalculaHOrariosComAlgoritmoGnético(InputData inputData, int cromossomos, int cromossomosPorElitismo, int probabilidadeCruzamento, int probabilidadeMutacao, int quantidadeMaxInteracoes, int interacoesSemMelhorias)
         {
             stopwatch.Start();
             //converter as probabilidades por 100
+
+            Disciplinas = inputData.Cursos.SelectMany(x => x.Disciplinas).ToList();
 
             var propabilidadeCruzamentoDouble = Convert.ToDouble(probabilidadeCruzamento) / 100;
             var propabilidadeMutacaoDouble = Convert.ToDouble(probabilidadeMutacao) / 100;
@@ -95,7 +98,7 @@ namespace ClassSchedulingWithAG.Services
 
                 //verificar iterações sem melhorias, caso a nota mais alta da população atual seja menor ou igual
                 //a nota da populacaoComMairesNotas, incrementar um, caso atinja o valor, pegar a maior nota e retornar
-                if(interacoesSemMelhorias > 0)
+                if (interacoesSemMelhorias > 0)
                 {
                     var notaMenorPopulacaoComMairesNotas = populacaoComMairesNotas.Min(x => x.Nota);
 
@@ -147,8 +150,8 @@ namespace ClassSchedulingWithAG.Services
                 populacao.AddRange(novaPopulacao);
                 listaDeCromossomosPorElitismoOrdenados.ForEach(x => x.Nota = 1000);
                 populacao.AddRange(listaDeCromossomosPorElitismoOrdenados);
-                listaDeCromossomosPorElitismoOrdenados.Clear(); 
-            } 
+                listaDeCromossomosPorElitismoOrdenados.Clear();
+            }
 
             stopwatch.Stop();
             return null;
@@ -182,7 +185,7 @@ namespace ClassSchedulingWithAG.Services
                     //pegar o curso que conten essa disciplina com essa carga horario e fase e professor
                     //pegar todas os codigos das disciplinas daquele curso e daquela faze
 
-                    var disciplina = GetDisciplinaByCodigo(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i], inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
+                    var disciplina = GetDisciplinaByCodigo(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]);
 
                     if (disciplina == null)
                         continue;
@@ -328,7 +331,7 @@ namespace ClassSchedulingWithAG.Services
                 {
                     foreach (var codDis in disciplinasDaSemana)
                     {
-                        var disciplina = GetDisciplinaByCodigo(codDis, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
+                        var disciplina = GetDisciplinaByCodigo(codDis);
 
                         if (disciplina != null)
                         {
@@ -339,15 +342,18 @@ namespace ClassSchedulingWithAG.Services
                             if (cargaHoraria == 40 && disciplinasDaSemana.Count(x => x == codDis) != 1)
                             {
                                 cromossomo.Nota = cromossomo.Nota - 1;
+                                continue;
                             }
                             if (cargaHoraria == 80 && disciplinasDaSemana.Count(x => x == codDis) != 2)
                             {
                                 cromossomo.Nota = cromossomo.Nota - 1;
+                                continue;
                             }
 
                             if (cargaHoraria == 120 && disciplinasDaSemana.Count(x => x == codDis) != 3)
                             {
                                 cromossomo.Nota = cromossomo.Nota - 1;
+                                continue;
                             }
 
                         }
@@ -364,7 +370,7 @@ namespace ClassSchedulingWithAG.Services
             {
                 for (int i = 0; i < cromossomo.DiasDaSemanaECodigosDasDisciplinas.Length; i++)
                 {
-                    var disciplina = GetDisciplinaByCodigo(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i], inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
+                    var disciplina = GetDisciplinaByCodigo(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]);
 
                     if (disciplina != null)
                     {
@@ -375,56 +381,29 @@ namespace ClassSchedulingWithAG.Services
                         //se ele não pode dar aula algum dia
                         if (prof != null)
                         {
-                            if (!prof.Disponibilidade.Segunda)
+                            if (!prof.Disponibilidade.Segunda && (NumberEndsWith(i, 0) || NumberEndsWith(i, 1)))
                             {
-                                VerificaSeProfessorEstaEmAlgumaDisciplina(0, 1, nomeProfessor, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList(), cromossomo);
+                                cromossomo.Nota = cromossomo.Nota - 1;
                             }
-                            if (!prof.Disponibilidade.Terca)
+                            if (!prof.Disponibilidade.Terca && (NumberEndsWith(i, 2) || NumberEndsWith(i, 3)))
                             {
-                                VerificaSeProfessorEstaEmAlgumaDisciplina(2, 3, nomeProfessor, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList(), cromossomo);
+                                cromossomo.Nota = cromossomo.Nota - 1;
                             }
-                            if (!prof.Disponibilidade.Quarta)
+                            if (!prof.Disponibilidade.Quarta && (NumberEndsWith(i, 4) || NumberEndsWith(i, 5)))
                             {
-                                VerificaSeProfessorEstaEmAlgumaDisciplina(4, 5, nomeProfessor, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList(), cromossomo);
+                                cromossomo.Nota = cromossomo.Nota - 1;
                             }
-                            if (!prof.Disponibilidade.Quinta)
+                            if (!prof.Disponibilidade.Quinta && (NumberEndsWith(i, 6) || NumberEndsWith(i, 7)))
                             {
-                                VerificaSeProfessorEstaEmAlgumaDisciplina(6, 7, nomeProfessor, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList(), cromossomo);
+                                cromossomo.Nota = cromossomo.Nota - 1;
                             }
-                            if (!prof.Disponibilidade.Sexta)
+                            if (!prof.Disponibilidade.Sexta && (NumberEndsWith(i, 8) || NumberEndsWith(i, 9)))
                             {
-                                VerificaSeProfessorEstaEmAlgumaDisciplina(8, 9, nomeProfessor, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList(), cromossomo);
+                                cromossomo.Nota = cromossomo.Nota - 1;
                             }
                         }
                     }
 
-                }
-            }
-        }
-
-        public void VerificaSeProfessorEstaEmAlgumaDisciplina(int periodo1, int periodo2, string nomeProfessor, List<Disciplina> disciplinas, Cromossomo cromossomo)
-        {
-            List<int> codPrimeiroESegundoPerido = new List<int>();
-
-            for (int i = 0; i < cromossomo.DiasDaSemanaECodigosDasDisciplinas.Length; i++)
-            {
-                if (NumberEndsWith(i, periodo1) || NumberEndsWith(i, periodo2))
-                {
-                    //add todas as disciplinas do dia
-                    codPrimeiroESegundoPerido.Add(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]);
-                }
-            }
-
-            //verifica se alguma dessas disciplinas é ministrada pelo professor
-            //caso for, desconta 1 ponto
-            foreach (var cod in codPrimeiroESegundoPerido)
-            {
-                var disciplina = GetDisciplinaByCodigo(cod, disciplinas);
-
-                if (disciplina != null)
-                {
-                    if (disciplina.Professor.Equals(nomeProfessor))
-                        cromossomo.Nota = cromossomo.Nota - 1;
                 }
             }
         }
@@ -459,52 +438,62 @@ namespace ClassSchedulingWithAG.Services
                     if (NumberEndsWith(i, 0))
                     {
                         listSegundaPrimeiroPeriodoManha.Add(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]);
+                        continue;
                     }
 
                     if (NumberEndsWith(i, 1))
                     {
                         listSegundaSegundoPeriodoManha.Add(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]);
+                        continue;
                     }
 
                     if (NumberEndsWith(i, 2))
                     {
                         listTercaPrimeiroPeriodoManha.Add(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]);
+                        continue;
                     }
 
                     if (NumberEndsWith(i, 3))
                     {
                         listTercaSegundoPeriodoManha.Add(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]);
+                        continue;
                     }
 
                     if (NumberEndsWith(i, 4))
                     {
                         listQuartaPrimeiroPeriodoManha.Add(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]);
+                        continue;
                     }
 
                     if (NumberEndsWith(i, 5))
                     {
                         listQuartaSegundoPeriodoManha.Add(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]);
+                        continue;
                     }
 
                     if (NumberEndsWith(i, 6))
                     {
                         listQuintaPrimeiroPeriodoManha.Add(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]);
+                        continue;
                     }
 
                     if (NumberEndsWith(i, 7))
                     {
                         listQuintaSegundoPeriodoManha.Add(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]);
+                        continue;
                     }
 
 
                     if (NumberEndsWith(i, 8))
                     {
                         listSextaPrimeiroPeriodoManha.Add(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]);
+                        continue;
                     }
 
                     if (NumberEndsWith(i, 9))
                     {
                         listSextaSegundoPeriodoManha.Add(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]);
+                        continue;
                     }
 
 
@@ -521,7 +510,7 @@ namespace ClassSchedulingWithAG.Services
                     //pegar o professor q da aula
                     if (cod != 0)
                     {
-                        var disciplina = GetDisciplinaByCodigo(cod, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
+                        var disciplina = GetDisciplinaByCodigo(cod);
 
 
                         var nomeProfessor = disciplina.Professor;
@@ -540,7 +529,7 @@ namespace ClassSchedulingWithAG.Services
                     //pegar o professor q da aula
                     if (cod != 0)
                     {
-                        var disciplina = GetDisciplinaByCodigo(cod, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
+                        var disciplina = GetDisciplinaByCodigo(cod);
 
 
                         var nomeProfessor = disciplina.Professor;
@@ -559,7 +548,7 @@ namespace ClassSchedulingWithAG.Services
                     //pegar o professor q da aula
                     if (cod != 0)
                     {
-                        var disciplina = GetDisciplinaByCodigo(cod, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
+                        var disciplina = GetDisciplinaByCodigo(cod);
 
 
                         var nomeProfessor = disciplina.Professor;
@@ -578,7 +567,7 @@ namespace ClassSchedulingWithAG.Services
                     //pegar o professor q da aula
                     if (cod != 0)
                     {
-                        var disciplina = GetDisciplinaByCodigo(cod, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
+                        var disciplina = GetDisciplinaByCodigo(cod);
 
 
                         var nomeProfessor = disciplina.Professor;
@@ -597,7 +586,7 @@ namespace ClassSchedulingWithAG.Services
                     //pegar o professor q da aula
                     if (cod != 0)
                     {
-                        var disciplina = GetDisciplinaByCodigo(cod, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
+                        var disciplina = GetDisciplinaByCodigo(cod);
 
 
                         var nomeProfessor = disciplina.Professor;
@@ -616,7 +605,7 @@ namespace ClassSchedulingWithAG.Services
                     //pegar o professor q da aula
                     if (cod != 0)
                     {
-                        var disciplina = GetDisciplinaByCodigo(cod, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
+                        var disciplina = GetDisciplinaByCodigo(cod);
 
 
                         var nomeProfessor = disciplina.Professor;
@@ -635,7 +624,7 @@ namespace ClassSchedulingWithAG.Services
                     //pegar o professor q da aula
                     if (cod != 0)
                     {
-                        var disciplina = GetDisciplinaByCodigo(cod, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
+                        var disciplina = GetDisciplinaByCodigo(cod);
 
 
                         var nomeProfessor = disciplina.Professor;
@@ -654,7 +643,7 @@ namespace ClassSchedulingWithAG.Services
                     //pegar o professor q da aula
                     if (cod != 0)
                     {
-                        var disciplina = GetDisciplinaByCodigo(cod, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
+                        var disciplina = GetDisciplinaByCodigo(cod);
 
 
                         var nomeProfessor = disciplina.Professor;
@@ -673,7 +662,7 @@ namespace ClassSchedulingWithAG.Services
                     //pegar o professor q da aula
                     if (cod != 0)
                     {
-                        var disciplina = GetDisciplinaByCodigo(cod, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
+                        var disciplina = GetDisciplinaByCodigo(cod);
 
 
                         var nomeProfessor = disciplina.Professor;
@@ -692,7 +681,7 @@ namespace ClassSchedulingWithAG.Services
                     //pegar o professor q da aula
                     if (cod != 0)
                     {
-                        var disciplina = GetDisciplinaByCodigo(cod, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
+                        var disciplina = GetDisciplinaByCodigo(cod);
 
 
                         var nomeProfessor = disciplina.Professor;
@@ -731,52 +720,62 @@ namespace ClassSchedulingWithAG.Services
                     if (NumberEndsWith(i, 0))
                     {
                         listSegundaPrimeiroPeriodoTarde.Add(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]);
+                        continue;
                     }
 
                     if (NumberEndsWith(i, 1))
                     {
                         listSegundaSegundoPeriodoTarde.Add(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]);
+                        continue;
                     }
 
                     if (NumberEndsWith(i, 2))
                     {
                         listTercaPrimeiroPeriodoTarde.Add(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]);
+                        continue;
                     }
 
                     if (NumberEndsWith(i, 3))
                     {
                         listTercaSegundoPeriodoTarde.Add(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]);
+                        continue;
                     }
 
                     if (NumberEndsWith(i, 4))
                     {
                         listQuartaPrimeiroPeriodoTarde.Add(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]);
+                        continue;
                     }
 
                     if (NumberEndsWith(i, 5))
                     {
                         listQuartaSegundoPeriodoTarde.Add(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]);
+                        continue;
                     }
 
                     if (NumberEndsWith(i, 6))
                     {
                         listQuintaPrimeiroPeriodoTarde.Add(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]);
+                        continue;
                     }
 
                     if (NumberEndsWith(i, 7))
                     {
                         listQuintaSegundoPeriodoTarde.Add(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]);
+                        continue;
                     }
 
 
                     if (NumberEndsWith(i, 8))
                     {
                         listSextaPrimeiroPeriodoTarde.Add(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]);
+                        continue;
                     }
 
                     if (NumberEndsWith(i, 9))
                     {
                         listSextaSegundoPeriodoTarde.Add(cromossomo.DiasDaSemanaECodigosDasDisciplinas[i]);
+                        continue;
                     }
                 }
 
@@ -786,7 +785,7 @@ namespace ClassSchedulingWithAG.Services
                     //pegar o professor q da aula
                     if (cod != 0)
                     {
-                        var disciplina = GetDisciplinaByCodigo(cod, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
+                        var disciplina = GetDisciplinaByCodigo(cod);
 
 
                         var nomeProfessor = disciplina.Professor;
@@ -805,7 +804,7 @@ namespace ClassSchedulingWithAG.Services
                     //pegar o professor q da aula
                     if (cod != 0)
                     {
-                        var disciplina = GetDisciplinaByCodigo(cod, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
+                        var disciplina = GetDisciplinaByCodigo(cod);
 
 
                         var nomeProfessor = disciplina.Professor;
@@ -824,7 +823,7 @@ namespace ClassSchedulingWithAG.Services
                     //pegar o professor q da aula
                     if (cod != 0)
                     {
-                        var disciplina = GetDisciplinaByCodigo(cod, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
+                        var disciplina = GetDisciplinaByCodigo(cod);
 
 
                         var nomeProfessor = disciplina.Professor;
@@ -843,7 +842,7 @@ namespace ClassSchedulingWithAG.Services
                     //pegar o professor q da aula
                     if (cod != 0)
                     {
-                        var disciplina = GetDisciplinaByCodigo(cod, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
+                        var disciplina = GetDisciplinaByCodigo(cod);
 
 
                         var nomeProfessor = disciplina.Professor;
@@ -862,7 +861,7 @@ namespace ClassSchedulingWithAG.Services
                     //pegar o professor q da aula
                     if (cod != 0)
                     {
-                        var disciplina = GetDisciplinaByCodigo(cod, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
+                        var disciplina = GetDisciplinaByCodigo(cod);
 
 
                         var nomeProfessor = disciplina.Professor;
@@ -881,7 +880,7 @@ namespace ClassSchedulingWithAG.Services
                     //pegar o professor q da aula
                     if (cod != 0)
                     {
-                        var disciplina = GetDisciplinaByCodigo(cod, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
+                        var disciplina = GetDisciplinaByCodigo(cod);
 
 
                         var nomeProfessor = disciplina.Professor;
@@ -900,7 +899,7 @@ namespace ClassSchedulingWithAG.Services
                     //pegar o professor q da aula
                     if (cod != 0)
                     {
-                        var disciplina = GetDisciplinaByCodigo(cod, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
+                        var disciplina = GetDisciplinaByCodigo(cod);
 
 
                         var nomeProfessor = disciplina.Professor;
@@ -919,7 +918,7 @@ namespace ClassSchedulingWithAG.Services
                     //pegar o professor q da aula
                     if (cod != 0)
                     {
-                        var disciplina = GetDisciplinaByCodigo(cod, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
+                        var disciplina = GetDisciplinaByCodigo(cod);
 
 
                         var nomeProfessor = disciplina.Professor;
@@ -938,7 +937,7 @@ namespace ClassSchedulingWithAG.Services
                     //pegar o professor q da aula
                     if (cod != 0)
                     {
-                        var disciplina = GetDisciplinaByCodigo(cod, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
+                        var disciplina = GetDisciplinaByCodigo(cod);
 
 
                         var nomeProfessor = disciplina.Professor;
@@ -957,8 +956,7 @@ namespace ClassSchedulingWithAG.Services
                     //pegar o professor q da aula
                     if (cod != 0)
                     {
-                        var disciplina = GetDisciplinaByCodigo(cod, inputData.Cursos.SelectMany(x => x.Disciplinas).ToList());
-
+                        var disciplina = GetDisciplinaByCodigo(cod);
 
                         var nomeProfessor = disciplina.Professor;
 
@@ -974,7 +972,7 @@ namespace ClassSchedulingWithAG.Services
 
                 //somar todos as notas de professores que tem conflito e diminuir do cromossomo
                 var notaGeralTarde = professoresESuasNotasTarde.Values.Where(x => x > 1).Sum();
-                
+
                 var notaGeral = Math.Max(notaGeralManha, notaGeralTarde);
 
                 cromossomo.Nota = cromossomo.Nota - notaGeral;
@@ -997,13 +995,13 @@ namespace ClassSchedulingWithAG.Services
             return number % 10 == end;
         }
 
-        private Disciplina GetDisciplinaByCodigo(int codigoDisciplina, List<Disciplina> disciplinas)
+        private Disciplina GetDisciplinaByCodigo(int codigoDisciplina)
         {
             if (codigoDisciplina == 0)
             {
                 return null;
             }
-            return disciplinas.FirstOrDefault(x => x.Codigo == codigoDisciplina);
+            return Disciplinas.FirstOrDefault(x => x.Codigo == codigoDisciplina);
         }
 
         private Cromossomo IniciaPopulacao(InputData inputData)
@@ -1157,10 +1155,10 @@ namespace ClassSchedulingWithAG.Services
                 var codPrimeiraDisciplina = fasesCursos[0];
 
                 Disciplina disciplina = null;
-                
+
                 for (int i = 0; i < fasesCursos.Count; i++)
                 {
-                    disciplina = GetDisciplinaByCodigo(fasesCursos[i], cursos.SelectMany(x => x.Disciplinas).ToList());
+                    disciplina = GetDisciplinaByCodigo(fasesCursos[i]);
 
                     if (disciplina == null)
                         continue;
@@ -1176,7 +1174,7 @@ namespace ClassSchedulingWithAG.Services
                     cursoDTO.Disciplinas.Add(disciplinaDto);
                 }
 
-                if(disciplina != null)
+                if (disciplina != null)
                 {
                     var curso = GetCursoByDisciplina(cursos, disciplina.Nome, disciplina.Professor, disciplina.Fase, disciplina.CH);
 
@@ -1184,7 +1182,7 @@ namespace ClassSchedulingWithAG.Services
 
                     cursosDTO.Add(cursoDTO);
                 }
-                
+
             }
 
             return cursosDTO;
@@ -1206,7 +1204,7 @@ namespace ClassSchedulingWithAG.Services
                 return "Quinta-feira";
 
 
-                return "Sexta-feira";
+            return "Sexta-feira";
         }
 
         public object CalculaHorariosComAlgoritmoGenetico(InputData inputData, int cromossomos, int cromossomosPorElitismo, int probabilidadeCruzamento, int probabilidadeMutacao, int quantidadeMaxInteracoes, int interacoesSemMelhorias)
